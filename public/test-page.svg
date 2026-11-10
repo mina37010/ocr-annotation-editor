@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1400" viewBox="0 0 1000 1400">
+  <rect width="1000" height="1400" fill="#f7f7f5"/>
+  <g stroke="#b8bdc0" fill="none" stroke-width="3">
+    <rect x="70" y="70" width="860" height="1260"/>
+    <path d="M70 240h860M70 420h860M70 600h860M70 780h860M70 960h860M70 1140h860"/>
+    <path d="M280 70v1260M700 70v1260"/>
+  </g>
+  <g fill="#25292b" font-family="sans-serif" font-size="38">
+    <text x="100" y="155">IIIF OCR TEST PAGE</text>
+    <text x="320" y="335">テスト1</text>
+    <text x="320" y="515">テスト2</text>
+  </g>
+</svg>
