@@ -34,7 +34,7 @@ export async function parsePdf(data: ArrayBuffer, sourceName: string, tsvText: s
     throw new Error(`PDFを解析できませんでした。${detail}`);
   }
   documents.set(id, document);
-  const pageInfo = new Map(inspectTsvPages(tsvText).map((item) => [item.page, item]));
+  const pageInfo = new Map((tsvText.trim() ? inspectTsvPages(tsvText) : []).map((item) => [item.page, item]));
   const canvases: CanvasInfo[] = [];
   for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
     const page = await document.getPage(pageNumber);

@@ -1,6 +1,6 @@
 # OCR Annotation Editor
 
-IIIF Presentation API 3.0 ManifestまたはPDFと、全ページ統合OCR TSVをブラウザ内で校正するReact SPAです。元Manifest、PDF、TSVは変更せず、校正結果を新しい統合TSVまたはIIIF AnnotationCollection JSONとして出力します。
+IIIF Presentation API 3.0 ManifestまたはPDFを表示し、OCR Annotationをブラウザ内で作成・校正するReact SPAです。OCR TSVは任意で、TSVなしでも領域を一から作成できます。元Manifest、PDF、TSVは変更せず、結果を新しい統合TSVまたはIIIF AnnotationCollection JSONとして出力します。
 
 ## 必要環境
 
@@ -15,7 +15,7 @@ npm install
 npm run dev
 ```
 
-`http://localhost:5174`を開き、`IIIF Manifest`または`PDF`を選んで、画像入力とOCR TSVを指定します。ファイル選択とURL指定の両方に対応します。
+`http://localhost:5174`を開き、`IIIF Manifest`または`PDF`を選びます。既存データを校正する場合だけOCR TSVを指定します。ファイル選択とURL指定の両方に対応します。
 
 ## ビルドとテスト
 
@@ -30,6 +30,7 @@ npm run preview
 
 - 指定された実Manifestの42 CanvasとImageService3解析
 - PDFのページ描画とTSVページ対応
+- TSVなしでの領域追加、テキスト編集、TSV書き出し
 - Canvas範囲外への配置防止
 - Canvas座標、`target #xywh`、`source_*`の同期
 - ID重複の拒否
@@ -39,6 +40,8 @@ npm run preview
 ## TSV
 
 TSVの各行を1 Annotationとして扱います。Manifestモードでは`canvas_id`をCanvas `id`と完全一致で結合します。PDFモードではTSVの`page`列でPDFページを特定し、そのページに記録された既存`canvas_id`をページIDとして維持します。OCR行のないPDFページだけ`urn:pdf:<PDFのSHA-256>/page/<ページ番号>`形式の内部IDを使用します。
+
+TSVを指定しない場合は空のデータセットを作成します。`N`または`追加`で領域を描き、右カラムでテキストを入力します。新規Annotationには衝突しないIDを割り当て、標準列と`source_*`列を持つ統合TSVとして出力します。
 
 入力列の順序と未知の追加列を維持します。`source_x/source_y/source_w/source_h`列が存在する場合、文字領域の変更時に画像寸法とCanvas寸法の比率から再計算します。`cell_*`は文字領域を変更しても更新しません。同じPDFページに複数の`canvas_id`があるTSVや、同じ`canvas_id`を複数ページで使うTSVは読み込みを拒否します。
 

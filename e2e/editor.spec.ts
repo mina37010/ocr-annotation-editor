@@ -159,3 +159,39 @@ test("loads a PDF beside the existing Manifest mode", async ({ page }) => {
   await expect(page.locator(".osd-host canvas")).toBeVisible();
   await expect(page.getByText("PDF 1ページ / 2件を読み込みました。", { exact: true })).toBeVisible();
 });
+
+test("creates and exports annotations without an input TSV", async ({ page }) => {
+  await page.goto("/");
+  await page.locator('input[accept*=".json"]').setInputFiles({
+    name: "manifest.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(manifest),
+  });
+  await page.getByRole("button", { name: "プロジェクトを開く" }).click();
+
+  await expect(page.getByText("Manifest 1ページから新規作成を開始しました。", { exact: true })).toBeVisible();
+  await expect(page.locator(".annotation-row")).toHaveCount(0);
+  await page.getByRole("button", { name: "追加", exact: true }).click();
+  const capture = page.locator(".add-capture");
+  await expect(capture).toBeVisible();
+  const bounds = await capture.boundingBox();
+  expect(bounds).not.toBeNull();
+  await page.mouse.move(bounds!.x + 160, bounds!.y + 180);
+  await page.mouse.down();
+  await page.mouse.move(bounds!.x + 330, bounds!.y + 270);
+  await page.mouse.up();
+
+  await expect(page.locator(".annotation-row")).toHaveCount(1);
+  await page.locator(".inspector textarea").fill("新規Annotation");
+  await page.locator(".inspector textarea").blur();
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "TSVを書き出す" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("ocr_all_pages_corrected.tsv");
+  const outputPath = await download.path();
+  const output = await readFile(outputPath!, "utf8");
+  expect(output).toContain("source_x\tsource_y\tsource_w\tsource_h\tstatus");
+  expect(output).toContain("新規Annotation");
+  expect(output).toContain(`${canvasId}#xywh=`);
+});

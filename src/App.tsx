@@ -27,7 +27,7 @@ import { downloadText } from "./lib/download";
 import { normalizeGeometryForExport, numberValue, recordRect, synchronizeGeometry } from "./lib/geometry";
 import { parseManifest } from "./lib/iiif";
 import { loadSavedProject, projectStorageKey, saveProject } from "./lib/persistence";
-import { correctedFilename, parseTsv, serializeTsv } from "./lib/tsv";
+import { correctedFilename, createEmptyDataset, parseTsv, serializeTsv } from "./lib/tsv";
 import type { AnnotationStatus, OcrRecord, ParsedManifest, Rect, SavedProject } from "./types";
 
 type ViewerTool = "select" | "add";
@@ -94,7 +94,7 @@ export function App() {
   const [loadOpen, setLoadOpen] = useState(true);
   const [dirty, setDirty] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [message, setMessage] = useState("ManifestまたはPDFとOCR TSVを開いてください。");
+  const [message, setMessage] = useState("ManifestまたはPDFを開いてください。TSVは任意です。");
   const [warnings, setWarnings] = useState<string[]>([]);
   const [past, setPast] = useState<OcrRecord[][]>([]);
   const [future, setFuture] = useState<OcrRecord[][]>([]);
@@ -350,7 +350,10 @@ export function App() {
       const { parsePdf } = await import("./lib/pdf");
       parsedManifest = await parsePdf(input.sourceData, input.sourceName, input.tsvText);
     }
-    const dataset = await parseTsv(input.tsvText, input.tsvName, parsedManifest.canvases);
+    const hasInputTsv = Boolean(input.tsvText.trim());
+    const dataset = hasInputTsv
+      ? await parseTsv(input.tsvText, input.tsvName, parsedManifest.canvases)
+      : await createEmptyDataset(input.tsvName);
     const nextProjectKey = projectStorageKey(parsedManifest.id, dataset.fingerprint);
     const saved = await loadSavedProject(nextProjectKey).catch(() => undefined);
     const restore = saved && window.confirm(`自動保存された編集（${new Date(saved.savedAt).toLocaleString("ja-JP")}）を復元しますか？`);
@@ -373,11 +376,13 @@ export function App() {
     setDirty(restore ? saved.dirty : false);
     setLoadOpen(false);
     setShowExisting(false);
-    setMessage(`${input.sourceType === "iiif" ? "Manifest" : "PDF"} ${parsedManifest.canvases.length}ページ / ${loadedRecords.length}件を読み込みました。`);
+    setMessage(hasInputTsv
+      ? `${input.sourceType === "iiif" ? "Manifest" : "PDF"} ${parsedManifest.canvases.length}ページ / ${loadedRecords.length}件を読み込みました。`
+      : `${input.sourceType === "iiif" ? "Manifest" : "PDF"} ${parsedManifest.canvases.length}ページから新規作成を開始しました。`);
   }
 
   function exportTsv() {
-    if (!manifest || records.length === 0) return;
+    if (!manifest) return;
     const normalizedRecords = records.map(normalizeGeometryForExport);
     downloadText(serializeTsv(normalizedRecords, columns), correctedFilename(sourceName), "text/tab-separated-values;charset=utf-8");
     setDirty(false);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CanvasInfo } from "../types";
-import { inspectTsvPages, parseTsv, requiredColumns, serializeTsv } from "./tsv";
+import { createEmptyDataset, inspectTsvPages, parseTsv, requiredColumns, serializeTsv } from "./tsv";
 
 const canvas: CanvasInfo = {
   id: "https://example.test/canvas/p1",
@@ -40,6 +40,15 @@ function sourceTsv(id = "ann-1") {
 }
 
 describe("TSV round trip", () => {
+  it("creates an empty dataset with exportable geometry columns", async () => {
+    const dataset = await createEmptyDataset();
+    expect(dataset.records).toEqual([]);
+    expect(dataset.columns).toContain("annotation_id");
+    expect(dataset.columns).toContain("source_x");
+    expect(dataset.columns.at(-1)).toBe("status");
+    expect(serializeTsv(dataset.records, dataset.columns)).toContain("annotation_id\tcanvas_id");
+  });
+
   it("preserves multiline text, IDs, coordinates and unknown columns", async () => {
     const first = await parseTsv(sourceTsv(), "ocr_all_pages.tsv", [canvas]);
     const exported = serializeTsv(first.records, first.columns);

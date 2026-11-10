@@ -7,6 +7,12 @@ export const requiredColumns = [
   "image_height", "canvas_width", "canvas_height", "status",
 ];
 
+export const emptyDatasetColumns = [
+  ...requiredColumns.slice(0, -1),
+  "source_x", "source_y", "source_w", "source_h",
+  "status",
+];
+
 function normalizedText(text: string) {
   return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 }
@@ -105,8 +111,19 @@ export async function parseTsv(text: string, sourceName: string, canvases: Canva
   };
 }
 
+export async function createEmptyDataset(sourceName = "ocr_all_pages.tsv"): Promise<OcrDataset> {
+  return {
+    columns: [...emptyDatasetColumns],
+    records: [],
+    sourceName,
+    fingerprint: await sha256("ocr-annotation-editor:empty-dataset:v1"),
+    warnings: [],
+  };
+}
+
 export function serializeTsv(records: OcrRecord[], columns: string[]) {
-  return `\uFEFF${Papa.unparse(records, {
+  const data = records.length > 0 ? records : { fields: columns, data: [] as OcrRecord[] };
+  return `\uFEFF${Papa.unparse(data, {
     columns,
     delimiter: "\t",
     newline: "\r\n",

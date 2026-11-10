@@ -52,13 +52,13 @@ export function LoadProjectDialog({ open, canClose, onClose, onLoad }: Props) {
 
   async function submit() {
     setError("");
-    if ((!sourceFile && !sourceUrl.trim()) || (!tsvFile && !tsvUrl.trim())) {
-      setError(`${sourceType === "iiif" ? "Manifest" : "PDF"}とTSVを指定してください。`);
+    if (!sourceFile && !sourceUrl.trim()) {
+      setError(`${sourceType === "iiif" ? "Manifest" : "PDF"}を指定してください。`);
       return;
     }
     setLoading(true);
     try {
-      const tsvText = tsvFile ? await tsvFile.text() : await fetchText(tsvUrl.trim(), "TSV");
+      const tsvText = tsvFile ? await tsvFile.text() : tsvUrl.trim() ? await fetchText(tsvUrl.trim(), "TSV") : "";
       const sourceName = sourceFile?.name ?? sourceUrl.trim().split("/").pop() ?? (sourceType === "iiif" ? "manifest.json" : "document.pdf");
       const sourceText = sourceType === "iiif" ? (sourceFile ? await sourceFile.text() : await fetchText(sourceUrl.trim(), "Manifest")) : undefined;
       const sourceData = sourceType === "pdf" ? (sourceFile ? await sourceFile.arrayBuffer() : await fetchData(sourceUrl.trim(), "PDF")) : undefined;
@@ -68,7 +68,7 @@ export function LoadProjectDialog({ open, canClose, onClose, onLoad }: Props) {
         sourceData,
         sourceName,
         tsvText,
-        tsvName: tsvFile?.name ?? tsvUrl.trim().split("/").pop() ?? "ocr_all_pages.tsv",
+        tsvName: tsvFile?.name ?? (tsvUrl.trim() ? tsvUrl.trim().split("/").pop() || "ocr_all_pages.tsv" : "ocr_all_pages.tsv"),
       });
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : String(loadError));
@@ -117,7 +117,7 @@ export function LoadProjectDialog({ open, canClose, onClose, onLoad }: Props) {
           </label>
           <label className="file-drop">
             <FileText size={22} />
-            <span>OCR TSV</span>
+            <span>OCR TSV（任意）</span>
             <strong>{tsvFile?.name ?? "TSVを選択"}</strong>
             <input type="file" accept=".tsv,text/tab-separated-values,text/plain" onChange={(event) => setTsvFile(event.target.files?.[0] ?? null)} />
           </label>
@@ -133,7 +133,7 @@ export function LoadProjectDialog({ open, canClose, onClose, onLoad }: Props) {
             />
           </label>
           <label>
-            <span><Link2 size={14} /> TSV URL</span>
+            <span><Link2 size={14} /> TSV URL（任意）</span>
             <input value={tsvUrl} onChange={(event) => setTsvUrl(event.target.value)} placeholder="https://…/ocr_all_pages.tsv" />
           </label>
         </div>
