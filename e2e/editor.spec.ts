@@ -83,6 +83,13 @@ test("loads files, synchronizes selection, edits, undoes and exports TSV", async
   await expect(page.locator(".annotation-row").first()).toHaveClass(/selected/);
   await expect(page.locator(".inspector textarea")).toHaveValue("テスト1");
 
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator(".annotation-row").nth(1)).toHaveClass(/selected/);
+  await expect(page.locator(".inspector textarea")).toHaveValue("テスト2");
+  await page.keyboard.press("ArrowUp");
+  await expect(page.locator(".annotation-row").first()).toHaveClass(/selected/);
+  await expect(page.locator(".inspector textarea")).toHaveValue("テスト1");
+
   await page.locator(".inspector textarea").fill("修正済みテキスト");
   await page.locator(".inspector textarea").blur();
   await expect(page.locator(".inspector select")).toHaveValue("corrected");

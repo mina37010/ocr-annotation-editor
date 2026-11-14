@@ -61,6 +61,7 @@ ocr_all_pages_corrected.annotations.json
 - `Enter`: マージ／並び替えを確定
 - `Esc`: マージ／並び替えを中止
 - `←` / `→`: ページ移動
+- `↑` / `↓`: 前後のAnnotationを選択
 - `Ctrl/Cmd + Z`: Undo
 - `Ctrl/Cmd + Shift + Z`または`Ctrl/Cmd + Y`: Redo
 - `Ctrl/Cmd + E`: TSV書き出し

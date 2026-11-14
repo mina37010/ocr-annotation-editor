@@ -322,6 +322,18 @@ export function App() {
     if (focus) setFocusToken((value) => value + 1);
   }
 
+  function moveAnnotationSelection(delta: -1 | 1) {
+    if (filteredRecords.length === 0 || mergeMode || reorderMode) return;
+    const currentIndex = filteredRecords.findIndex((record) => record.annotation_id === selectedId);
+    const nextIndex = currentIndex < 0
+      ? delta > 0 ? 0 : filteredRecords.length - 1
+      : Math.max(0, Math.min(filteredRecords.length - 1, currentIndex + delta));
+    const next = filteredRecords[nextIndex];
+    if (!next || next.annotation_id === selectedId) return;
+    selectAnnotation(next.annotation_id, true);
+    setMessage(`Annotation ${nextIndex + 1} / ${filteredRecords.length}`);
+  }
+
   function changePage(nextIndex: number) {
     if (!manifest) return;
     const safeIndex = Math.max(0, Math.min(manifest.canvases.length - 1, nextIndex));
@@ -479,8 +491,24 @@ export function App() {
         applyReorder();
         return;
       }
-      if (event.key === "ArrowLeft") changePage(canvasIndex - 1);
-      if (event.key === "ArrowRight") changePage(canvasIndex + 1);
+      if (!modifier && !event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+        event.preventDefault();
+        event.stopPropagation();
+        moveAnnotationSelection(event.key === "ArrowUp" ? -1 : 1);
+        return;
+      }
+      if (!modifier && !event.altKey && event.key === "ArrowLeft") {
+        event.preventDefault();
+        event.stopPropagation();
+        changePage(canvasIndex - 1);
+        return;
+      }
+      if (!modifier && !event.altKey && event.key === "ArrowRight") {
+        event.preventDefault();
+        event.stopPropagation();
+        changePage(canvasIndex + 1);
+        return;
+      }
       if (key === "v" && !mergeMode && !reorderMode) setTool("select");
       if (key === "n" && !mergeMode && !reorderMode) setTool("add");
       if ((event.key === "Delete" || event.key === "Backspace") && selectedId && !mergeMode && !reorderMode) deleteRecord(selectedId);
